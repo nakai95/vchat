@@ -85,38 +85,41 @@ export default function HostRoomPage() {
   }, [localVideoRef, remoteVideoRef]);
 
   return (
-    <>
-      <div className="flex flex-wrap gap-4">
-        <video
-          id="localVideo"
-          className="sm:w-full md:w-fit bg-slate-600"
-          muted
-          autoPlay
-          playsInline
-          ref={localVideoRef}
-        />
+    <div className="relative w-full h-full">
+      <div className="w-full h-5/6 flex justify-center bg-primary-50">
         <video
           id="remoteVideo"
-          className="sm:w-full md:w-fit bg-slate-600"
+          className="object-cover"
           autoPlay
           playsInline
           ref={remoteVideoRef}
         />
       </div>
-
-      {requestUrl.length > 0 && (
-        <div className="mt-8">
-          <h2 className="mb-2">Copy invite link.</h2>
-          <Snippet
-            hideSymbol
-            variant="flat"
-            color="primary"
-            classNames={{ base: "max-w-full", pre: "truncate" }}
-          >
-            {requestUrl}
-          </Snippet>
-        </div>
-      )}
-    </>
+      <div className="absolute top-0 right-0 ">
+        <video
+          id="localVideo"
+          className="h-36 w-auto border-1 border-default-600"
+          muted
+          autoPlay
+          playsInline
+          ref={localVideoRef}
+        />
+      </div>
+      <div className="w-full h-1/6 py-6">
+        {requestUrl.length > 0 && (
+          <div>
+            <p className="font-bold">Invite link</p>
+            <Snippet
+              hideSymbol
+              variant="flat"
+              color="primary"
+              classNames={{ base: "max-w-full", pre: "truncate" }}
+            >
+              {requestUrl}
+            </Snippet>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

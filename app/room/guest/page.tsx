@@ -77,24 +77,27 @@ export default function GuestRoomPage() {
   }, [localVideoRef, remoteVideoRef, roomId]);
 
   return (
-    <>
-      <div className="flex flex-wrap gap-4">
-        <video
-          id="localVideo"
-          className="w-full bg-slate-600"
-          muted
-          autoPlay
-          playsInline
-          ref={localVideoRef}
-        />
+    <div className="relative w-full h-full">
+      <div className="w-full h-5/6 flex justify-center bg-cyan-950">
         <video
           id="remoteVideo"
-          className="w-full bg-slate-600"
+          className="object-cover"
           autoPlay
           playsInline
           ref={remoteVideoRef}
         />
       </div>
-    </>
+      <div className="absolute top-0 right-0 ">
+        <video
+          id="localVideo"
+          className="h-36 w-auto border-2 bg-waring-50"
+          muted
+          autoPlay
+          playsInline
+          ref={localVideoRef}
+        />
+      </div>
+      <div className="w-full h-1/6"></div>
+    </div>
   );
 }
