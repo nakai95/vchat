@@ -26,6 +26,13 @@ export class RoomsManeger {
   }
 
   /**
+   * roomIdを取得する
+   */
+  getRoomId() {
+    return this.roomId;
+  }
+
+  /**
    * roomを作成する
    * @param data
    * @returns

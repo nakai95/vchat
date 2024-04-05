@@ -5,13 +5,13 @@ import {
   NavbarItem,
 } from "@nextui-org/navbar";
 import { Link } from "@nextui-org/link";
-import { siteConfig } from "@/config/site";
+import { siteConfig } from "@/src/config/site";
 import NextLink from "next/link";
 
-import { ThemeSwitch } from "@/components/theme-switch";
-import { GithubIcon } from "@/components/icons";
+import { ThemeSwitch } from "@/src/components/theme-switch";
+import { GithubIcon } from "@/src/components/icons";
 
-import { Logo } from "@/components/icons";
+import { Logo } from "@/src/components/icons";
 
 export const Navbar = () => {
   return (

@@ -1,9 +1,9 @@
 "use client";
-import { Media } from "@/functions/media";
-import { RoomsManeger } from "@/functions/roomsManager";
-import { WebRTC } from "@/functions/webRTC";
+import { Media } from "@/src/functions/media";
+import { RoomsManeger } from "@/src/functions/roomsManager";
+import { WebRTC } from "@/src/functions/webRTC";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 async function join(
   roomId: string,
@@ -11,9 +11,20 @@ async function join(
   remoteVideo: HTMLVideoElement
 ) {
   const rtc = new WebRTC();
-  rtc.checkConnectionState();
   const roomsManeger = new RoomsManeger();
   const media = new Media(localVideo, remoteVideo);
+  rtc.checkConnectionState({
+    onConnected: () => {
+      rtc.onTrack((event) => {
+        const [remoteStream] = event.streams;
+        console.log("onTrack", remoteStream);
+        media.setRemoteSrcObject(remoteStream);
+      });
+    },
+    onDisconnected: () => {
+      media.stopRemoteStream();
+    },
+  });
   await media.setupLocalStream();
   media.forEachTrack((track) => {
     rtc.peerConnection.addTrack(track, media.localStream);
@@ -24,12 +35,6 @@ async function join(
   rtc.onIceCandidate(async (candidate) => {
     console.log("onIceCandidate", candidate);
     await roomsManeger.addDoc(guestCollection, candidate);
-  });
-
-  rtc.onTrack((event) => {
-    const [remoteStream] = event.streams;
-    console.log("onTrack", remoteStream);
-    media.setRemoteSrcObject(remoteStream);
   });
 
   // roomからofferを取得してanswerを作成する
@@ -56,9 +61,12 @@ async function join(
       }
     });
   });
+  return { rtc, roomsManeger, media };
 }
 
 export default function GuestRoomPage() {
+  const [rtc, setRtc] = useState<WebRTC | null>(null);
+  const [media, setMedia] = useState<Media | null>(null);
   const searchParams = useSearchParams();
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -71,14 +79,31 @@ export default function GuestRoomPage() {
         remoteVideoRef.current !== null &&
         roomId
       ) {
-        await join(roomId, localVideoRef.current, remoteVideoRef.current);
+        join(roomId, localVideoRef.current, remoteVideoRef.current).then(
+          ({ rtc, media }) => {
+            setRtc(rtc);
+            setMedia(media);
+          }
+        );
       }
     })();
   }, [localVideoRef, remoteVideoRef, roomId]);
 
+  useEffect(() => {
+    return () => {
+      if (media) {
+        media.stopRemoteStream();
+      }
+      if (rtc) {
+        rtc.disconnect();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="relative w-full h-full">
-      <div className="w-full h-5/6 flex justify-center bg-cyan-950">
+      <div className="w-full h-5/6 flex justify-center bg-primary-50">
         <video
           id="remoteVideo"
           className="object-cover"
@@ -90,14 +115,23 @@ export default function GuestRoomPage() {
       <div className="absolute top-0 right-0 ">
         <video
           id="localVideo"
-          className="h-36 w-auto border-2 bg-waring-50"
+          className="h-36 w-auto border-1 border-default-600"
           muted
           autoPlay
           playsInline
           ref={localVideoRef}
         />
       </div>
-      <div className="w-full h-1/6"></div>
+      <div className="w-full h-1/6">
+        <button
+          onClick={() => {
+            media?.stopRemoteStream();
+            rtc?.disconnect();
+          }}
+        >
+          disconnect
+        </button>
+      </div>
     </div>
   );
 }

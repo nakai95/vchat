@@ -1,3 +1,5 @@
+import { on } from "events";
+
 // Default configuration - Change these if you have a different STUN or TURN server.
 const configuration = {
   iceServers: [
@@ -49,27 +51,49 @@ export class WebRTC {
   }
 
   async onIceCandidate(callback: (candidate: RTCIceCandidateInit) => void) {
-    this.peerConnection.addEventListener("icecandidate", (event) => {
+    this.peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
         callback(event.candidate.toJSON());
       }
-    });
+    };
   }
 
   async onTrack(callback: (event: RTCTrackEvent) => void) {
-    this.peerConnection.addEventListener("track", callback);
+    this.peerConnection.ontrack = callback;
   }
 
-  async checkConnectionState() {
+  async checkConnectionState({
+    onConnected,
+    onDisconnected,
+  }: {
+    onConnected: () => void;
+    onDisconnected: () => void;
+  }) {
     this.peerConnection.addEventListener("connectionstatechange", () => {
       console.log(
         "Connection state change:",
         this.peerConnection.connectionState
       );
+      // connectedの場合イベントを発火する
+      if (this.peerConnection.connectionState === "connected") {
+        onConnected();
+      }
+
+      // disconnectedの場合は切断する
+      if (this.peerConnection.connectionState === "disconnected") {
+        onDisconnected();
+      }
     });
   }
 
-  async close() {
+  async disconnect() {
+    // Remove all event listeners
+    this.peerConnection.ontrack = null;
+    this.peerConnection.onicecandidate = null;
+    this.peerConnection.oniceconnectionstatechange = null;
+    this.peerConnection.onsignalingstatechange = null;
+
+    // Close the connection
     this.peerConnection.close();
   }
 }

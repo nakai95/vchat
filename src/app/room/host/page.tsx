@@ -1,20 +1,35 @@
 "use client";
-import { siteConfig } from "@/config/site";
-import { Media } from "@/functions/media";
-import { RoomsManeger } from "@/functions/roomsManager";
-import { WebRTC } from "@/functions/webRTC";
+import { siteConfig } from "@/src/config/site";
+import { Media } from "@/src/functions/media";
+import { RoomsManeger } from "@/src/functions/roomsManager";
+import { WebRTC } from "@/src/functions/webRTC";
 import { Snippet } from "@nextui-org/snippet";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 async function start(
   localVideo: HTMLVideoElement,
-  remoteVideo: HTMLVideoElement,
-  callback: (roomId: string) => void
+  remoteVideo: HTMLVideoElement
 ) {
   const rtc = new WebRTC();
-  rtc.checkConnectionState();
   const roomsManeger = new RoomsManeger();
   const media = new Media(localVideo, remoteVideo);
+  rtc.checkConnectionState({
+    onConnected: () => {
+      rtc.onTrack((event) => {
+        const [remoteStream] = event.streams;
+        console.log("onTrack", remoteStream);
+        media.setRemoteSrcObject(remoteStream);
+      });
+    },
+    onDisconnected: () => {
+      media.stopRemoteStream();
+      rtc.onTrack((event) => {
+        const [remoteStream] = event.streams;
+        console.log("onTrack", remoteStream);
+        media.setRemoteSrcObject(remoteStream);
+      });
+    },
+  });
   await media.setupLocalStream();
   rtc.onTrack((event) => {
     const [remoteStream] = event.streams;
@@ -34,7 +49,7 @@ async function start(
     },
   };
   const roomId = await roomsManeger.createRoom(roomWithOffer);
-  callback(roomId);
+
   await rtc.setLocalDescription(offer);
   // roomにanswerがあれば、remoteDescriptionを設定する
   const roomRef = await roomsManeger.getDocRef(roomsManeger.roomsRef, roomId);
@@ -63,26 +78,50 @@ async function start(
       }
     });
   });
+
+  return { rtc, roomsManeger, media };
 }
 
 export default function HostRoomPage() {
+  const [rtc, setRtc] = useState<WebRTC | null>(null);
+  const [roomsManeger, setRoomsManeger] = useState<RoomsManeger | null>(null);
+  const [media, setMedia] = useState<Media | null>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
-  const [roomId, setRoomId] = useState<string>("");
 
   const requestUrl = useMemo(() => {
+    const roomId = roomsManeger?.getRoomId() || "";
     return roomId.length > 0
       ? `${window.location.origin}${siteConfig.pages.guest}?id=${roomId}`
       : "";
-  }, [roomId]);
+  }, [roomsManeger]);
 
   useEffect(() => {
     (async () => {
       if (localVideoRef.current !== null && remoteVideoRef.current !== null) {
-        start(localVideoRef.current, remoteVideoRef.current, setRoomId);
+        start(localVideoRef.current, remoteVideoRef.current).then(
+          ({ rtc, roomsManeger, media }) => {
+            setRtc(rtc);
+            setRoomsManeger(roomsManeger);
+            setMedia(media);
+          }
+        );
       }
     })();
   }, [localVideoRef, remoteVideoRef]);
+
+  useEffect(() => {
+    return () => {
+      if (media) {
+        media.stopLocalStream();
+        media.stopRemoteStream();
+      }
+      if (rtc) {
+        rtc.disconnect();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="relative w-full h-full">

@@ -1,7 +1,7 @@
 import { Link } from "@nextui-org/link";
 import { button as buttonStyles } from "@nextui-org/theme";
-import { siteConfig } from "@/config/site";
-import { title, subtitle } from "@/components/primitives";
+import { siteConfig } from "@/src/config/site";
+import { title, subtitle } from "@/src/components/primitives";
 
 export default function Home() {
   return (

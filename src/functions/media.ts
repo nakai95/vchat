@@ -45,4 +45,26 @@ export class Media {
   setRemoteSrcObject(stream: MediaStream) {
     this.remoteVideo.srcObject = stream;
   }
+
+  /**
+   * localStreamを停止する
+   */
+  stopLocalStream() {
+    this.localStream.getTracks().forEach((track) => {
+      track.stop();
+    });
+  }
+
+  /**
+   * remoteStreamを停止する
+   */
+  stopRemoteStream() {
+    if (this.remoteVideo.srcObject) {
+      const tracks = (this.remoteVideo.srcObject as MediaStream).getTracks();
+      tracks.forEach((track) => {
+        track.stop();
+      });
+      this.remoteVideo.srcObject = null;
+    }
+  }
 }
