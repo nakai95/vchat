@@ -50,7 +50,7 @@ export default function RootLayout({
               <Link
                 isExternal
                 className="flex items-center gap-1 text-current"
-                href={siteConfig.links.github}
+                href={siteConfig.links.profile}
                 title="nextui.org homepage"
               >
                 <span className="text-default-600">Powered by</span>

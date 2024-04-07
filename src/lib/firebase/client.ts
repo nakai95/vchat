@@ -9,7 +9,7 @@ import {
   FIREBASE_MEASUREMENT_ID,
   FIREBASE_MESSAGING_SENDER_ID,
   FIREBASE_STORAGE_BUCKET,
-} from "@/src/constant/env";
+} from "@/src/constant";
 
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
