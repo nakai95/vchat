@@ -4,6 +4,7 @@ export const siteConfig = {
   name: "vchat",
   description: "You can start 1on1 video chat without registering an account.",
   pages: {
+    home: "/",
     host: "/rooms/host",
     guest: "/rooms/guest",
   },

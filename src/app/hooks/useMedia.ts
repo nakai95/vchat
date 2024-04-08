@@ -36,6 +36,11 @@ export const useMedia = () => {
     [localStream]
   );
 
+  const stopUserMedia = useCallback(() => {
+    if (localStream.current === null) return;
+    localStream.current.getTracks().forEach((track) => track.stop());
+  }, [localStream]);
+
   const setRemoteSrcObject = useCallback(
     (stream: MediaStream) => {
       if (remoteVideoRef.current === null) return;
@@ -44,6 +49,11 @@ export const useMedia = () => {
     },
     [remoteVideoRef]
   );
+
+  const removeRemoteSrcObject = useCallback(() => {
+    if (remoteVideoRef.current === null) return;
+    remoteVideoRef.current.srcObject = null;
+  }, [remoteVideoRef]);
 
   const handleSwitchMic = useCallback(() => {
     setIsMute((prev) => !prev);
@@ -70,7 +80,9 @@ export const useMedia = () => {
     isVideoOff,
     setupMedia,
     addTracks,
+    stopUserMedia,
     setRemoteSrcObject,
+    removeRemoteSrcObject,
     handleSwitchMic,
     handleSwitchVideo,
   };

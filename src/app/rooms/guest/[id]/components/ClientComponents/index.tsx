@@ -1,17 +1,23 @@
 "use client";
 import { useWebRTC, useMedia, useRooms } from "@/src/app/hooks";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Menu } from "./components";
 import { Guest } from "@/src/types";
 import { MicIcon, MicOffIcon } from "@/src/components/icons";
+import { useRouter } from "next/navigation";
+import { siteConfig } from "@/src/config/site";
+import HangUpModal from "@/src/components/HangUpModal";
+import { Spinner } from "@nextui-org/spinner";
 
 export function ClientComponents(props: {
   roomId: string;
   addRoomGuest: (roomId: string, data: Guest) => void;
 }) {
+  const router = useRouter();
   const { roomId, addRoomGuest } = props;
   const { getRoom, updateRoom, onSnapshotHost } = useRooms();
-  const { peerConnection } = useWebRTC();
+  const { peerConnection, closePeerConnection, isLoading, isDisconnected } =
+    useWebRTC();
   const {
     localVideoRef,
     remoteVideoRef,
@@ -19,10 +25,19 @@ export function ClientComponents(props: {
     isVideoOff,
     setupMedia,
     addTracks,
+    stopUserMedia,
     setRemoteSrcObject,
+    removeRemoteSrcObject,
     handleSwitchMic,
     handleSwitchVideo,
   } = useMedia();
+
+  const handleHangUp = useCallback(() => {
+    closePeerConnection();
+    removeRemoteSrcObject();
+    stopUserMedia();
+    router.push(siteConfig.pages.home);
+  }, [closePeerConnection, removeRemoteSrcObject, router, stopUserMedia]);
 
   useEffect(() => {
     (async () => {
@@ -63,8 +78,17 @@ export function ClientComponents(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [peerConnection, localVideoRef, remoteVideoRef]);
 
+  useEffect(() => {
+    return () => {
+      closePeerConnection();
+      removeRemoteSrcObject();
+      stopUserMedia();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
-    <div className="relative w-full h-full">
+    <div className="w-full h-full">
       <div className="relative w-full h-5/6 flex justify-center bg-primary-50">
         <video
           id="remoteVideo"
@@ -73,25 +97,11 @@ export function ClientComponents(props: {
           playsInline
           ref={remoteVideoRef}
         />
-        {/* <div className="absolute w-full bottom-0 left-0 ">
-          <div className="flex items-center justify-end gap-4 p-2">
-            {remoteVideoRef.current?.srcObject && (
-              <div className="p-2 rounded-md bg-gray-700 bg-opacity-25">
-                {isRemoteMute ? (
-                  <MicOffIcon className="text-red-500" />
-                ) : (
-                  <MicIcon />
-                )}
-              </div>
-            )}
-          </div>
-        </div> */}
-
         <div className="absolute top-0 right-0 ">
-          <div className="relative">
+          <div className="relative border-1 border-default-600 bg-black">
             <video
               id="localVideo"
-              className="h-36 w-auto border-1 border-default-600"
+              className="h-36 w-auto"
               muted
               autoPlay
               playsInline
@@ -102,19 +112,20 @@ export function ClientComponents(props: {
             </div>
           </div>
         </div>
+        {isLoading && (
+          <Spinner className="absolute m-auto top-0 bottom-0 right-0 left-0 " />
+        )}
       </div>
-
       <div className="w-full h-1/6 py-6">
         <Menu
           isMute={isMute}
           isVideoOff={isVideoOff}
-          onHangUp={() => {
-            // TODO: stop peerConnection and remoteStream
-          }}
+          onHangUp={handleHangUp}
           onClickMic={handleSwitchMic}
           onClickVideo={handleSwitchVideo}
         />
       </div>
+      {isDisconnected && <HangUpModal onHangUp={handleHangUp} />}
     </div>
   );
 }
