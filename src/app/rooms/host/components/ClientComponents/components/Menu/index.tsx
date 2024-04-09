@@ -6,16 +6,18 @@ import {
   VideocamIcon,
   VideocamOffIcon,
 } from "@/src/components/icons";
+import { siteConfig } from "@/src/config/site";
 import { Button } from "@nextui-org/button";
+import { Link } from "@nextui-org/link";
 
 export function Menu(props: {
   isMute: boolean;
   isVideoOff: boolean;
-  onHangUp: () => void;
+  onHandUp: () => void;
   onClickMic: () => void;
   onClickVideo: () => void;
 }) {
-  const { isMute, isVideoOff, onHangUp, onClickMic, onClickVideo } = props;
+  const { isMute, isVideoOff, onHandUp, onClickMic, onClickVideo } = props;
 
   return (
     <div className="flex justify-center gap-4">
@@ -25,7 +27,14 @@ export function Menu(props: {
       <Button isIconOnly radius="full" color="default" onClick={onClickVideo}>
         {isVideoOff ? <VideocamOffIcon /> : <VideocamIcon />}
       </Button>
-      <Button isIconOnly radius="full" color="danger" onClick={onHangUp}>
+      <Button
+        as={Link}
+        href={siteConfig.pages.home}
+        isIconOnly
+        radius="full"
+        color="danger"
+        onClick={onHandUp}
+      >
         <CallEndIcon />
       </Button>
     </div>

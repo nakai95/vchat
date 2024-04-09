@@ -4,8 +4,6 @@ import { useCallback, useEffect } from "react";
 import { Menu } from "./components";
 import { Guest } from "@/src/types";
 import { MicIcon, MicOffIcon } from "@/src/components/icons";
-import { useRouter } from "next/navigation";
-import { siteConfig } from "@/src/config/site";
 import HangUpModal from "@/src/components/HangUpModal";
 import { Spinner } from "@nextui-org/spinner";
 
@@ -13,7 +11,6 @@ export function ClientComponents(props: {
   roomId: string;
   addRoomGuest: (roomId: string, data: Guest) => void;
 }) {
-  const router = useRouter();
   const { roomId, addRoomGuest } = props;
   const { getRoom, updateRoom, onSnapshotHost } = useRooms();
   const { peerConnection, closePeerConnection, isLoading, isDisconnected } =
@@ -33,11 +30,21 @@ export function ClientComponents(props: {
   } = useMedia();
 
   const handleHangUp = useCallback(() => {
+    console.log("hangup");
     closePeerConnection();
     removeRemoteSrcObject();
     stopUserMedia();
-    router.push(siteConfig.pages.home);
-  }, [closePeerConnection, removeRemoteSrcObject, router, stopUserMedia]);
+  }, [closePeerConnection, removeRemoteSrcObject, stopUserMedia]);
+
+  const handleBeforeUnloadEvent = useCallback(
+    (_: BeforeUnloadEvent): void => {
+      console.log("beforeUnload");
+      closePeerConnection();
+      removeRemoteSrcObject();
+      stopUserMedia();
+    },
+    [closePeerConnection, removeRemoteSrcObject, stopUserMedia]
+  );
 
   useEffect(() => {
     (async () => {
@@ -79,10 +86,10 @@ export function ClientComponents(props: {
   }, [peerConnection, localVideoRef, remoteVideoRef]);
 
   useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnloadEvent);
     return () => {
-      closePeerConnection();
-      removeRemoteSrcObject();
-      stopUserMedia();
+      console.log("unmount");
+      window.removeEventListener("beforeunload", handleBeforeUnloadEvent);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -125,7 +132,7 @@ export function ClientComponents(props: {
           onClickVideo={handleSwitchVideo}
         />
       </div>
-      {isDisconnected && <HangUpModal onHangUp={handleHangUp} />}
+      {isDisconnected && <HangUpModal onClose={handleHangUp} />}
     </div>
   );
 }

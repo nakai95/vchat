@@ -6,8 +6,9 @@ import {
   VideocamIcon,
   VideocamOffIcon,
 } from "@/src/components/icons";
+import { siteConfig } from "@/src/config/site";
 import { Button } from "@nextui-org/button";
-import { useCallback, useState } from "react";
+import { Link } from "@nextui-org/link";
 
 export function Menu(props: {
   isMute: boolean;
@@ -26,7 +27,14 @@ export function Menu(props: {
       <Button isIconOnly radius="full" color="default" onClick={onClickVideo}>
         {isVideoOff ? <VideocamOffIcon /> : <VideocamIcon />}
       </Button>
-      <Button isIconOnly radius="full" color="danger" onClick={onHangUp}>
+      <Button
+        as={Link}
+        href={siteConfig.pages.home}
+        isIconOnly
+        radius="full"
+        color="danger"
+        onClick={onHangUp}
+      >
         <CallEndIcon />
       </Button>
     </div>

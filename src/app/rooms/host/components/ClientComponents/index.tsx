@@ -7,7 +7,6 @@ import { Snippet } from "@nextui-org/snippet";
 import { Spinner } from "@nextui-org/spinner";
 import { siteConfig } from "@/src/config/site";
 import { MicIcon, MicOffIcon } from "@/src/components/icons";
-import { useRouter } from "next/navigation";
 import HangUpModal from "@/src/components/HangUpModal";
 
 export function ClientComponents(props: {
@@ -15,14 +14,12 @@ export function ClientComponents(props: {
   deleteRoom: (roomId: string) => void;
   addRoomHost: (roomId: string, data: Host) => void;
 }) {
-  const router = useRouter();
   const { createRoom, deleteRoom, addRoomHost } = props;
   const { roomId, setRoomId, onSnapshotRoom, onSnapshotGuest } = useRooms();
   const {
     peerConnection,
     isPending,
     isLoading,
-    isSuccess,
     isDisconnected,
     closePeerConnection,
   } = useWebRTC();
@@ -41,11 +38,41 @@ export function ClientComponents(props: {
   } = useMedia();
 
   const handleHangUp = useCallback(() => {
+    if (roomId) {
+      deleteRoom(roomId);
+      setRoomId("");
+    }
     closePeerConnection();
     removeRemoteSrcObject();
     stopUserMedia();
-    router.push(siteConfig.pages.home);
-  }, [closePeerConnection, removeRemoteSrcObject, router, stopUserMedia]);
+  }, [
+    closePeerConnection,
+    deleteRoom,
+    removeRemoteSrcObject,
+    roomId,
+    setRoomId,
+    stopUserMedia,
+  ]);
+
+  const handleBeforeUnloadEvent = useCallback(
+    (_: BeforeUnloadEvent): void => {
+      if (roomId) {
+        deleteRoom(roomId);
+        setRoomId("");
+      }
+      closePeerConnection();
+      removeRemoteSrcObject();
+      stopUserMedia();
+    },
+    [
+      closePeerConnection,
+      deleteRoom,
+      removeRemoteSrcObject,
+      roomId,
+      setRoomId,
+      stopUserMedia,
+    ]
+  );
 
   useEffect(() => {
     (async () => {
@@ -94,28 +121,12 @@ export function ClientComponents(props: {
   }, [peerConnection, localVideoRef, remoteVideoRef]);
 
   useEffect(() => {
-    if (isSuccess) {
-      deleteRoom(roomId);
-    }
-  }, [isSuccess, deleteRoom, roomId]);
-
-  useEffect(() => {
-    if (isDisconnected) {
-      removeRemoteSrcObject();
-    }
-  }, [isDisconnected, removeRemoteSrcObject]);
-
-  useEffect(() => {
+    window.addEventListener("beforeunload", handleBeforeUnloadEvent);
     return () => {
-      closePeerConnection();
-      removeRemoteSrcObject();
-      stopUserMedia();
-      if (roomId) {
-        deleteRoom(roomId);
-      }
+      window.removeEventListener("beforeunload", handleBeforeUnloadEvent);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [roomId]);
 
   return (
     <div className="relative w-full h-full">
@@ -169,12 +180,12 @@ export function ClientComponents(props: {
         <Menu
           isMute={isMute}
           isVideoOff={isVideoOff}
-          onHangUp={handleHangUp}
+          onHandUp={handleHangUp}
           onClickMic={handleSwitchMic}
           onClickVideo={handleSwitchVideo}
         />
       </div>
-      {isDisconnected && <HangUpModal onHangUp={handleHangUp} />}
+      {isDisconnected && <HangUpModal onClose={handleHangUp} />}
     </div>
   );
 }

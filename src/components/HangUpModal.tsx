@@ -8,12 +8,13 @@ import {
   useDisclosure,
 } from "@nextui-org/modal";
 import { Button } from "@nextui-org/button";
+import { Link } from "@nextui-org/link";
+import { siteConfig } from "../config/site";
 
-export default function HangUpModal(props: { onHangUp: () => void }) {
-  const { onHangUp } = props;
+export default function HangUpModal(props: { onClose: () => void }) {
   const { isOpen, onOpenChange } = useDisclosure({
     defaultOpen: true,
-    onChange: onHangUp,
+    onClose: props.onClose,
   });
 
   return (
@@ -34,7 +35,12 @@ export default function HangUpModal(props: { onHangUp: () => void }) {
               <p>The other user has left the room.</p>
             </ModalBody>
             <ModalFooter>
-              <Button color="primary" onPress={onClose}>
+              <Button
+                as={Link}
+                href={siteConfig.pages.home}
+                color="primary"
+                onPress={onClose}
+              >
                 Go to Home
               </Button>
             </ModalFooter>
