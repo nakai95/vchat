@@ -30,7 +30,6 @@ export function ClientComponents(props: {
   } = useMedia();
 
   const handleHangUp = useCallback(() => {
-    console.log("hangup");
     closePeerConnection();
     removeRemoteSrcObject();
     stopUserMedia();
@@ -38,7 +37,6 @@ export function ClientComponents(props: {
 
   const handleBeforeUnloadEvent = useCallback(
     (_: BeforeUnloadEvent): void => {
-      console.log("beforeUnload");
       closePeerConnection();
       removeRemoteSrcObject();
       stopUserMedia();
@@ -88,7 +86,6 @@ export function ClientComponents(props: {
   useEffect(() => {
     window.addEventListener("beforeunload", handleBeforeUnloadEvent);
     return () => {
-      console.log("unmount");
       window.removeEventListener("beforeunload", handleBeforeUnloadEvent);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
